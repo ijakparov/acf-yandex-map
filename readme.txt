@@ -35,6 +35,9 @@ Major features:
 
 == Changelog ==
 
+= 1.3.1 =
+* Added option API-key
+
 = 1.2.4 =
 * Added support Repeater field
 

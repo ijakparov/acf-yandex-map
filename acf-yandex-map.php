@@ -12,7 +12,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
 defined( 'YA_MAP_LANG_DOMAIN' ) or define( 'YA_MAP_LANG_DOMAIN', 'acf-yandex-map' );
-defined( 'ACF_YA_MAP_VERSION' ) or define( 'ACF_YA_MAP_VERSION', '1.3.0' );
+defined( 'ACF_YA_MAP_VERSION' ) or define( 'ACF_YA_MAP_VERSION', '1.3.1' );
 
 load_plugin_textdomain( YA_MAP_LANG_DOMAIN, false, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
 
@@ -42,27 +42,18 @@ function acf_yandex_map_slug_page_output() { ?>
 
 		<form action="options.php" method="POST">
 			<?php
-				settings_fields( 'option_group' );     // скрытые защитные поля
-				do_settings_sections( 'acf_yandex_map_page' ); // секции с настройками (опциями). У нас она всего одна 'section_id'
+				settings_fields( 'option_group' );
+				do_settings_sections( 'acf_yandex_map_page' );
 				submit_button();
 			?>
 		</form>
 	</div><?php
 }
 
-/**
- * Регистрируем настройки.
- * Настройки будут храниться в массиве, а не одна настройка = одна опция.
- */
 add_action('admin_init', 'plugin_settings');
 function plugin_settings() {
-	// параметры: $option_group, $option_name, $sanitize_callback
 	register_setting( 'option_group', 'acf_yandex_map', 'sanitize_callback' );
-
-	// параметры: $id, $title, $callback, $page
 	add_settings_section( 'section_id', 'Options', '', 'acf_yandex_map_page' ); 
-
-	// параметры: $id, $title, $callback, $page, $section, $args
 	add_settings_field('acf_yandex_map', 'API-key', 'fill_acf_yandex_map', 'acf_yandex_map_page', 'section_id' );
 }
 
@@ -78,15 +69,12 @@ function fill_acf_yandex_map() {
 	<?php
 }
 
-## Очистка данных
 function sanitize_callback($options) { 
-	// очищаем
 	foreach ($options as $name => &$val) {
 		if ($name == 'api_key' ) {
 			$val = strip_tags($val);
 		}
 	}
-
 	return $options;
 }
 
