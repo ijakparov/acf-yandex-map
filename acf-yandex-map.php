@@ -28,6 +28,69 @@ add_action( 'acf/include_field_types', 'include_field_types_yandex_map' );
 add_action( 'acf/register_fields', 'include_field_types_yandex_map' );
 
 
+/**
+ *  Page for options
+ */
+add_action('admin_menu', 'add_plugin_page');
+function add_plugin_page() {
+	add_options_page( YA_MAP_LANG_DOMAIN, YA_MAP_LANG_DOMAIN, 'manage_options', 'acf_yandex_map_slug', 'acf_yandex_map_slug_page_output' );
+}
+
+function acf_yandex_map_slug_page_output() { ?>
+	<div class="wrap">
+		<h3><?php echo get_admin_page_title() ?></h3>
+
+		<form action="options.php" method="POST">
+			<?php
+				settings_fields( 'option_group' );     // скрытые защитные поля
+				do_settings_sections( 'acf_yandex_map_page' ); // секции с настройками (опциями). У нас она всего одна 'section_id'
+				submit_button();
+			?>
+		</form>
+	</div><?php
+}
+
+/**
+ * Регистрируем настройки.
+ * Настройки будут храниться в массиве, а не одна настройка = одна опция.
+ */
+add_action('admin_init', 'plugin_settings');
+function plugin_settings() {
+	// параметры: $option_group, $option_name, $sanitize_callback
+	register_setting( 'option_group', 'acf_yandex_map', 'sanitize_callback' );
+
+	// параметры: $id, $title, $callback, $page
+	add_settings_section( 'section_id', 'Options', '', 'acf_yandex_map_page' ); 
+
+	// параметры: $id, $title, $callback, $page, $section, $args
+	add_settings_field('acf_yandex_map', 'API-key', 'fill_acf_yandex_map', 'acf_yandex_map_page', 'section_id' );
+}
+
+function fill_acf_yandex_map() {
+	$val = get_option('acf_yandex_map');
+	$val = $val ? $val['api_key'] : null; ?>
+	
+	<label>
+		(for //api-maps.yandex.ru/2.1)&nbsp; 
+		<input type="text" name="acf_yandex_map[api_key]" style="min-width: 300px;" value="<?php echo esc_attr( $val ) ?>" />
+	</label>
+	
+	<?php
+}
+
+## Очистка данных
+function sanitize_callback($options) { 
+	// очищаем
+	foreach ($options as $name => &$val) {
+		if ($name == 'api_key' ) {
+			$val = strip_tags($val);
+		}
+	}
+
+	return $options;
+}
+
+
 /// Function for frontend
 
 if ( ! function_exists( 'the_yandex_map' ) ) {
@@ -48,7 +111,11 @@ if ( ! function_exists( 'the_yandex_map' ) ) {
 		}
 
 		$dir = plugin_dir_url( __FILE__ );
-		wp_register_script( 'yandex-map-api', '//api-maps.yandex.ru/2.1/?lang=' . get_bloginfo( 'language' ), array( 'jquery' ), null );
+
+		$val = get_option('acf_yandex_map');
+		$val = $val ? $val['api_key'] : null;
+
+		wp_register_script( 'yandex-map-api', '//api-maps.yandex.ru/2.1/?lang=' . get_bloginfo( 'language' ) . ($val ? '&api_key=' . $val : ''), array( 'jquery' ), null );
 		wp_register_script( 'yandex-map-frontend', "{$dir}js/yandex-map.min.js", array( 'yandex-map-api' ), ACF_YA_MAP_VERSION );
 		wp_enqueue_script( 'yandex-map-frontend' );
 
